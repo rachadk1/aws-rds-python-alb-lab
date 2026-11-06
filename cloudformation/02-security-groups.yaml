@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  RDS Python ALB lab - four security groups and six inbound rules /
+  quatre groupes de securite et six regles entrantes.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: lab6
+    AllowedPattern: '^[a-z][a-z0-9-]{1,23}$'
+    Description: Resource name prefix / prefixe des noms de ressources.
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC output of the network stack / sortie VpcId de la stack reseau.
+  AdminCidr:
+    Type: String
+    AllowedPattern: '^((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])/32$'
+    ConstraintDescription: One valid public IPv4 with /32 / une seule IPv4 valide suivie de /32.
+    Description: Admin public IPv4 CIDR for SSH / IPv4 publique administrateur pour SSH.
+
+Resources:
+  # Explicit IPv4 egress follows the learning lab / sorties IPv4 explicites conformes au lab.
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${ProjectName}-alb-sg'
+      GroupDescription: HTTP from Internet to ALB / HTTP Internet vers ALB
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+          Description: Lab IPv4 egress / sorties IPv4 du lab
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-alb-sg'}
+        - {Key: Project, Value: !Ref ProjectName}
+
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${ProjectName}-bastion-sg'
+      GroupDescription: SSH from admin IP / SSH depuis IP administrateur
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+          Description: Lab IPv4 egress / sorties IPv4 du lab
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-bastion-sg'}
+        - {Key: Project, Value: !Ref ProjectName}
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${ProjectName}-web-sg'
+      GroupDescription: App from ALB and SSH from bastion / App ALB et SSH bastion
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+          Description: Lab IPv4 egress / sorties IPv4 du lab
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-web-sg'}
+        - {Key: Project, Value: !Ref ProjectName}
+
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${ProjectName}-rds-sg'
+      GroupDescription: MySQL from web and bastion / MySQL depuis web et bastion
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+          Description: Lab IPv4 egress / sorties IPv4 du lab
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-rds-sg'}
+        - {Key: Project, Value: !Ref ProjectName}
+
+  # Separate rule resources express dependencies / ressources de regles separees pour les dependances.
+  AlbHttpFromInternet:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt AlbSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+      Description: Public HTTP / HTTP public
+
+  BastionSshFromAdmin:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt BastionSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Ref AdminCidr
+      Description: Admin IPv4 only / IPv4 administrateur uniquement
+
+  WebAppFromAlb:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WebSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId: !GetAtt AlbSecurityGroup.GroupId
+      Description: App and health checks from ALB / application et controles ALB
+
+  WebSshFromBastion:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt WebSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
+      Description: SSH through bastion / SSH via bastion
+
+  RdsMysqlFromWeb:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt RdsSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !GetAtt WebSecurityGroup.GroupId
+      Description: Application SQL access / acces SQL applicatif
+
+  RdsMysqlFromBastion:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !GetAtt RdsSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !GetAtt BastionSecurityGroup.GroupId
+      Description: Database initialization / initialisation de la base
+
+Outputs:
+  VpcId:
+    Description: VPC used by all four groups / VPC commun aux quatre groupes.
+    Value: !Ref VpcId
+  AlbSecurityGroupId:
+    Description: Attach to the ALB / a associer a ALB.
+    Value: !GetAtt AlbSecurityGroup.GroupId
+  BastionSecurityGroupId:
+    Description: Attach to the bastion / a associer au bastion.
+    Value: !GetAtt BastionSecurityGroup.GroupId
+  WebSecurityGroupId:
+    Description: Attach to both web servers / a associer aux deux serveurs web.
+    Value: !GetAtt WebSecurityGroup.GroupId
+  RdsSecurityGroupId:
+    Description: Attach to RDS / a associer a RDS.
+    Value: !GetAtt RdsSecurityGroup.GroupId

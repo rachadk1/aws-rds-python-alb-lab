@@ -4,16 +4,16 @@
 
 Build a Flask application on two private EC2 instances, store its data in private Amazon RDS for MySQL, and serve traffic through an internet-facing Application Load Balancer in **us-east-2 (Ohio)**.
 
-This learning project uses CloudFormation for the network foundation. Security groups, EC2, RDS, application deployment, ALB configuration and failure experiments will be completed step by step.
+This learning project manages infrastructure through staged CloudFormation templates deployed from Git Bash. Security groups, EC2, RDS, ALB and application bootstrap will be automated as the stages progress. AWS console provisioning is not required.
 
 ## Current scope
 
-**Stage 01 is prepared: network foundation. AWS deployment and application stages are not yet verified.**
+**Stage 01: network deployment completed with CREATE_COMPLETE. Stage 02 CloudFormation template and deployment script are prepared; AWS deployment and application connectivity remain to be verified.**
 
 | Stage | Deliverable | State |
 |---|---|---|
-| 01 | VPC, five subnets, routing and optional NAT Gateway | Template and instructions prepared |
-| 02 | Four security groups and restricted traffic paths | Planned |
+| 01 | VPC, five subnets, routing and optional NAT Gateway | Deployed: CREATE_COMPLETE |
+| 02 | Four security groups and restricted traffic paths | CloudFormation template ready; deployment pending |
 | 03 | SSH key, bastion and two private web servers | Planned |
 | 04 | Private RDS MySQL and least-privilege application account | Planned |
 | 05 | Python application and TLS database connection | Planned |
@@ -27,7 +27,10 @@ This learning project uses CloudFormation for the network foundation. Security g
 - `infra/01-network`: first implementation branch; subsequent stages use separate branches and pull requests to `develop`.
 - [Git and GitHub workflow](docs/en/git-workflow.md).
 - [Stage 01: deploy and understand the network](docs/en/01-network.md).
-- [CloudFormation template](cloudformation/01-network.yaml).
+- [Stage 02: configure security groups](docs/en/02-security-groups.md).
+- [Network CloudFormation template](cloudformation/01-network.yaml).
+- [Security CloudFormation template](cloudformation/02-security-groups.yaml).
+- [Security deployment script](scripts/deploy-security-groups.sh).
 
 These links become available as the repository and corresponding branches are pushed. Files for later stages are added only when that work is completed.
 
