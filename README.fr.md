@@ -8,13 +8,13 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 
 ## Périmètre actuel
 
-**Étape 01 : réseau déployé avec CREATE_COMPLETE. Le template CloudFormation et le script de déploiement de l'étape 02 sont préparés ; le déploiement AWS et la connectivité applicative restent à vérifier.**
+**Étapes 01 à 03 déployées avec CREATE_COMPLETE. Les contrôles EC2 et les trois tests SSH ont réussi avec la clé existante ; les serveurs privés sont accessibles via le bastion. RDS et les étapes applicatives restent à réaliser.**
 
 | Étape | Résultat | État |
 |---|---|---|
 | 01 | VPC, cinq sous-réseaux, routage et NAT Gateway optionnel | Déployé : CREATE_COMPLETE |
-| 02 | Quatre groupes de sécurité et flux restreints | Template CloudFormation prêt ; déploiement à effectuer |
-| 03 | Clé SSH, bastion et deux serveurs web privés | Prévu |
+| 02 | Quatre groupes de sécurité et flux restreints | Déployé : CREATE_COMPLETE |
+| 03 | Clé SSH existante, bastion et deux serveurs web privés | Déployé ; contrôles EC2 et trois tests SSH réussis |
 | 04 | RDS MySQL privé et compte applicatif aux droits limités | Prévu |
 | 05 | Application Python et connexion TLS à la base | Prévu |
 | 06 | ALB, groupe cible et contrôles de santé | Prévu |
@@ -28,6 +28,9 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 - [Workflow Git et GitHub](docs/git-workflow.md).
 - [Étape 01 : déployer et comprendre le réseau](docs/01-network.md).
 - [Étape 02 : configurer les groupes de sécurité](docs/02-security-groups.md).
+- [Étape 03 : réutiliser la clé SSH et déployer EC2](docs/03-ec2.md).
+- [Template CloudFormation EC2](cloudformation/03-ec2.yaml).
+- [Script de déploiement EC2](scripts/deploy-ec2.sh).
 - [Template CloudFormation réseau](cloudformation/01-network.yaml).
 - [Template CloudFormation sécurité](cloudformation/02-security-groups.yaml).
 - [Script de déploiement sécurité](scripts/deploy-security-groups.sh).

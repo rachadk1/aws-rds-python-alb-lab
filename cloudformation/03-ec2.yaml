@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  RDS Python ALB lab - bastion and two private EC2 instances /
+  bastion et deux EC2 privees, reutilisation de la cle SSH existante.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: lab6
+    AllowedPattern: '^[a-z][a-z0-9-]{1,23}$'
+    Description: Resource name prefix / prefixe des noms de ressources.
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 key pair from the first lab in Ohio / paire existante du premier lab dans Ohio.
+  LatestAl2023Ami:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: Amazon Linux 2023 x86_64 AMI / AMI Amazon Linux 2023 x86_64.
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Existing lab VPC / VPC existant du lab.
+  BastionSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Public bastion subnet / sous-reseau public du bastion.
+  PrivateSubnetAId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private subnet in AZ A / sous-reseau prive AZ A.
+  PrivateSubnetBId:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private subnet in AZ B / sous-reseau prive AZ B.
+  BastionSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Bastion group from stage 02 / groupe bastion de l'etape 02.
+  WebSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Web group from stage 02 / groupe web de l'etape 02.
+
+Resources:
+  # No KeyPair resource: the existing key remains external / la cle existante reste hors de la stack.
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAl2023Ami
+      InstanceType: t3.micro
+      KeyName: !Ref KeyName
+      CreditSpecification:
+        CPUCredits: standard
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          SubnetId: !Ref BastionSubnetId
+          GroupSet: [!Ref BastionSecurityGroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 8
+            Encrypted: true
+            DeleteOnTermination: true
+      PropagateTagsToVolumeOnCreation: true
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-bastion'}
+        - {Key: Project, Value: !Ref ProjectName}
+        - {Key: Role, Value: bastion}
+
+  WebAInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAl2023Ami
+      InstanceType: t3.micro
+      KeyName: !Ref KeyName
+      CreditSpecification:
+        CPUCredits: standard
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: false
+          DeleteOnTermination: true
+          SubnetId: !Ref PrivateSubnetAId
+          GroupSet: [!Ref WebSecurityGroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 8
+            Encrypted: true
+            DeleteOnTermination: true
+      PropagateTagsToVolumeOnCreation: true
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-web-a'}
+        - {Key: Project, Value: !Ref ProjectName}
+        - {Key: Role, Value: web}
+
+  WebBInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAl2023Ami
+      InstanceType: t3.micro
+      KeyName: !Ref KeyName
+      CreditSpecification:
+        CPUCredits: standard
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: false
+          DeleteOnTermination: true
+          SubnetId: !Ref PrivateSubnetBId
+          GroupSet: [!Ref WebSecurityGroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3
+            VolumeSize: 8
+            Encrypted: true
+            DeleteOnTermination: true
+      PropagateTagsToVolumeOnCreation: true
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-web-b'}
+        - {Key: Project, Value: !Ref ProjectName}
+        - {Key: Role, Value: web}
+
+Outputs:
+  VpcId:
+    Value: !Ref VpcId
+  ExistingKeyName:
+    Description: Reused key; not created or deleted by this stack / cle reutilisee hors stack.
+    Value: !Ref KeyName
+  AmiId:
+    Value: !Ref LatestAl2023Ami
+  BastionInstanceId:
+    Value: !Ref BastionInstance
+  BastionPublicIp:
+    Value: !GetAtt BastionInstance.PublicIp
+  BastionPrivateIp:
+    Value: !GetAtt BastionInstance.PrivateIp
+  WebAInstanceId:
+    Value: !Ref WebAInstance
+  WebAPrivateIp:
+    Value: !GetAtt WebAInstance.PrivateIp
+  WebBInstanceId:
+    Value: !Ref WebBInstance
+  WebBPrivateIp:
+    Value: !GetAtt WebBInstance.PrivateIp
