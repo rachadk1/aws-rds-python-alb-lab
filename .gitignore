@@ -1,0 +1,13 @@
+# Credentials and local evidence / secrets et preuves locales
+*.pem
+*.key
+.aws/
+.env
+.env.*
+!.env.example
+credentials
+local/
+__pycache__/
+.venv/
+.DS_Store
+Thumbs.db
