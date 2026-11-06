@@ -19,7 +19,7 @@ Un sous-réseau public est défini par sa route vers l'IGW. L'attribution automa
 
 Les cinq CIDR sont fixes pour rester compatibles avec les droits SQL du guide d'origine. Les noms utilisent `lab6-` pour distinguer ce lab ; sélectionner nos IDs dans les écrans où le guide emploie `lab-vpc` ou `lab-public-a`.
 
-Le template crée le réseau uniquement. Les groupes de sécurité, EC2, RDS, l'ALB et leurs configurations seront réalisés ensuite. Le groupe de sous-réseaux RDS utilisera les deux sous-réseaux privés ; cela ne transforme pas la future base Single-AZ en base Multi-AZ.
+Ce template crée le réseau uniquement. Les groupes de sécurité, EC2, RDS et l'ALB seront ajoutés par les templates CloudFormation suivants, déployés depuis Git Bash. Le groupe de sous-réseaux RDS utilisera les deux sous-réseaux privés ; cela ne transforme pas la future base Single-AZ en base Multi-AZ.
 
 ## 1. Connexion et région
 
@@ -85,7 +85,14 @@ aws cloudformation describe-stacks \
   --region us-east-2
 ```
 
-Résultat attendu : **`CREATE_COMPLETE`** au premier déploiement, puis **`UPDATE_COMPLETE`** après une mise à jour. Dans CloudFormation → `lab6-network` → Outputs, retrouver le VPC, les cinq sous-réseaux et le NAT si activé. Dans la console VPC, vérifier les cinq associations aux tables de routage et la route privée vers un NAT `Available`.
+Résultat attendu : **`CREATE_COMPLETE`** au premier déploiement, puis **`UPDATE_COMPLETE`** après une mise à jour. La sortie CLI ci-dessus fournit les IDs du VPC, des cinq sous-réseaux et du NAT si activé. Pour inspecter les ressources gérées sans console AWS, utiliser :
+
+```bash
+aws cloudformation list-stack-resources \
+  --stack-name lab6-network \
+  --query 'StackResourceSummaries[].[LogicalResourceId,ResourceType,ResourceStatus]' \
+  --output table --region us-east-2 --no-cli-pager
+```
 
 Pour conserver les sorties sans les publier :
 
@@ -114,7 +121,7 @@ Après `ROLLBACK_COMPLETE`, corriger la cause puis supprimer la stack échouée 
 
 Pour désactiver le NAT tout en gardant le réseau, réexécuter la commande de déploiement avec les **mêmes AZ**, mais `EnableNatGateway=false`. CloudFormation supprime la route privée, le NAT et son EIP. Les EC2 privées perdent alors leur sortie Internet via ce NAT. Cela ne supprime et n'arrête pas EC2, RDS ou l'ALB créés séparément.
 
-Pour supprimer le réseau, **supprimer d'abord les ressources créées ensuite dans ce VPC** : ALB, groupe cible, EC2 et disques associés, RDS, éventuelles sauvegardes/snapshots non souhaités, groupe de sous-réseaux RDS et groupes de sécurité personnalisés. Puis :
+Pour supprimer le réseau, **supprimer d'abord les stacks CloudFormation des ressources qui utilisent ce VPC**, notamment les futures stacks ALB, EC2 et RDS, puis `lab6-security`. Vérifier les éventuelles sauvegardes ou snapshots conservés. La suppression s'effectue depuis AWS CLI ; respecter l'ordre des dépendances. Puis :
 
 ```bash
 aws cloudformation delete-stack --stack-name lab6-network --region us-east-2

@@ -19,7 +19,7 @@ A public subnet is defined by its route to the IGW. Automatic public IPv4 assign
 
 The five CIDRs are fixed to match the upstream SQL host grants. Names use `lab6-` to identify this lab; select our IDs on screens where the upstream guide uses `lab-vpc` or `lab-public-a`.
 
-The template creates only the network. Security groups, EC2, RDS, ALB and their configuration will follow. The RDS subnet group will use both private subnets; that alone does not turn the planned Single-AZ database into Multi-AZ.
+This template creates only the network. Security groups, EC2, RDS and ALB will be added through the next CloudFormation templates, deployed from Git Bash. The RDS subnet group will use both private subnets; that alone does not turn the planned Single-AZ database into Multi-AZ.
 
 ## 1. Sign in and select the region
 
@@ -85,7 +85,14 @@ aws cloudformation describe-stacks \
   --region us-east-2
 ```
 
-Expected result: **`CREATE_COMPLETE`** on the first deployment, then **`UPDATE_COMPLETE`** after an update. In CloudFormation → `lab6-network` → Outputs, find the VPC, five subnets and NAT when enabled. In the VPC console, check all five subnet route-table associations and the private route to an `Available` NAT gateway.
+Expected result: **`CREATE_COMPLETE`** on the first deployment, then **`UPDATE_COMPLETE`** after an update. The CLI output above provides IDs for the VPC, five subnets and NAT when enabled. To inspect managed resources without the AWS console, run:
+
+```bash
+aws cloudformation list-stack-resources \
+  --stack-name lab6-network \
+  --query 'StackResourceSummaries[].[LogicalResourceId,ResourceType,ResourceStatus]' \
+  --output table --region us-east-2 --no-cli-pager
+```
 
 To keep outputs without publishing them:
 
@@ -114,7 +121,7 @@ After `ROLLBACK_COMPLETE`, fix the cause, then delete the failed stack before re
 
 To disable NAT while keeping the network, rerun the deployment command with the **same AZs**, but `EnableNatGateway=false`. CloudFormation removes the private default route, NAT and EIP. Private EC2 instances then lose Internet egress through this NAT. This does not delete or stop separately created EC2, RDS or ALB resources.
 
-To delete the network, **first delete resources subsequently created in this VPC**: ALB, target group, EC2 and associated disks, RDS, any unwanted retained backups/snapshots, RDS subnet group and custom security groups. Then:
+To delete the network, **first delete the CloudFormation stacks whose resources use this VPC**, including the future ALB, EC2 and RDS stacks, then `lab6-security`. Check any retained backups or snapshots. Use AWS CLI for deletion and respect dependency order. Then:
 
 ```bash
 aws cloudformation delete-stack --stack-name lab6-network --region us-east-2

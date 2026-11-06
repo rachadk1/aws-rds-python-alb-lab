@@ -4,16 +4,16 @@
 
 Déployer une application Flask sur deux instances EC2 privées, stocker ses données dans une base Amazon RDS MySQL privée et distribuer les requêtes avec un Application Load Balancer public dans **us-east-2 (Ohio)**.
 
-Ce projet utilise CloudFormation pour créer le réseau. Les groupes de sécurité, EC2, RDS, l'application, l'ALB et les tests de panne seront réalisés étape par étape.
+Ce projet gère l'infrastructure avec des templates CloudFormation déployés depuis Git Bash. Les groupes de sécurité, EC2, RDS, l'ALB et l'installation applicative seront automatisés au fil des étapes. Aucune création de ressource dans la console AWS n'est requise.
 
 ## Périmètre actuel
 
-**L'étape 01 est préparée : le socle réseau. Le déploiement AWS et les étapes applicatives ne sont pas encore vérifiés.**
+**Étape 01 : réseau déployé avec CREATE_COMPLETE. Le template CloudFormation et le script de déploiement de l'étape 02 sont préparés ; le déploiement AWS et la connectivité applicative restent à vérifier.**
 
 | Étape | Résultat | État |
 |---|---|---|
-| 01 | VPC, cinq sous-réseaux, routage et NAT Gateway optionnel | Template et instructions préparés |
-| 02 | Quatre groupes de sécurité et flux restreints | Prévu |
+| 01 | VPC, cinq sous-réseaux, routage et NAT Gateway optionnel | Déployé : CREATE_COMPLETE |
+| 02 | Quatre groupes de sécurité et flux restreints | Template CloudFormation prêt ; déploiement à effectuer |
 | 03 | Clé SSH, bastion et deux serveurs web privés | Prévu |
 | 04 | RDS MySQL privé et compte applicatif aux droits limités | Prévu |
 | 05 | Application Python et connexion TLS à la base | Prévu |
@@ -27,7 +27,10 @@ Ce projet utilise CloudFormation pour créer le réseau. Les groupes de sécurit
 - `infra/01-network` : première branche de réalisation ; une branche et une pull request vers `develop` pour chaque étape suivante.
 - [Workflow Git et GitHub](docs/git-workflow.md).
 - [Étape 01 : déployer et comprendre le réseau](docs/01-network.md).
-- [Template CloudFormation](cloudformation/01-network.yaml).
+- [Étape 02 : configurer les groupes de sécurité](docs/02-security-groups.md).
+- [Template CloudFormation réseau](cloudformation/01-network.yaml).
+- [Template CloudFormation sécurité](cloudformation/02-security-groups.yaml).
+- [Script de déploiement sécurité](scripts/deploy-security-groups.sh).
 
 Les liens deviennent accessibles après la création du dépôt et la publication des branches correspondantes. Les fichiers des étapes suivantes seront ajoutés au fur et à mesure du travail réalisé.
 
