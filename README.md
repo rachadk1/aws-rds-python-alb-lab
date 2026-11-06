@@ -8,13 +8,13 @@ This learning project manages infrastructure through staged CloudFormation templ
 
 ## Current scope
 
-**Stage 01: network deployment completed with CREATE_COMPLETE. Stage 02 CloudFormation template and deployment script are prepared; AWS deployment and application connectivity remain to be verified.**
+**Stages 01–03 deployed with CREATE_COMPLETE. All three EC2 status checks and SSH tests passed using the existing key; private web servers are reached through the bastion. RDS and application stages remain to be completed.**
 
 | Stage | Deliverable | State |
 |---|---|---|
 | 01 | VPC, five subnets, routing and optional NAT Gateway | Deployed: CREATE_COMPLETE |
-| 02 | Four security groups and restricted traffic paths | CloudFormation template ready; deployment pending |
-| 03 | SSH key, bastion and two private web servers | Planned |
+| 02 | Four security groups and restricted traffic paths | Deployed: CREATE_COMPLETE |
+| 03 | Existing SSH key, bastion and two private web servers | Deployed; EC2 checks and three SSH tests passed |
 | 04 | Private RDS MySQL and least-privilege application account | Planned |
 | 05 | Python application and TLS database connection | Planned |
 | 06 | ALB, target group and health checks | Planned |
@@ -28,6 +28,9 @@ This learning project manages infrastructure through staged CloudFormation templ
 - [Git and GitHub workflow](docs/en/git-workflow.md).
 - [Stage 01: deploy and understand the network](docs/en/01-network.md).
 - [Stage 02: configure security groups](docs/en/02-security-groups.md).
+- [Stage 03: reuse the SSH key and deploy EC2](docs/en/03-ec2.md).
+- [EC2 CloudFormation template](cloudformation/03-ec2.yaml).
+- [EC2 deployment script](scripts/deploy-ec2.sh).
 - [Network CloudFormation template](cloudformation/01-network.yaml).
 - [Security CloudFormation template](cloudformation/02-security-groups.yaml).
 - [Security deployment script](scripts/deploy-security-groups.sh).
