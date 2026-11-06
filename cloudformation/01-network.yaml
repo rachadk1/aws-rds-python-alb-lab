@@ -1,0 +1,225 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  RDS Python ALB lab - network foundation / socle reseau.
+  Five subnets across two AZs; optional zonal NAT Gateway / cinq sous-reseaux et NAT optionnel.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: lab6
+    AllowedPattern: '^[a-z][a-z0-9-]{1,23}$'
+    Description: Resource name prefix / prefixe des noms de ressources.
+  AvailabilityZoneA:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: First AZ in the deployment region / premiere AZ de la region.
+  AvailabilityZoneB:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Description: Different second AZ in the same region / deuxieme AZ distincte.
+  EnableNatGateway:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: >-
+      true creates a billable NAT Gateway and EIP; needed before installing private web servers.
+      true cree un NAT Gateway et une EIP facturables, requis pour installer les serveurs prives.
+
+Rules:
+  DifferentAvailabilityZones:
+    Assertions:
+      - Assert: !Not [!Equals [!Ref AvailabilityZoneA, !Ref AvailabilityZoneB]]
+        AssertDescription: Choose two different AZs / choisir deux AZ differentes.
+
+Conditions:
+  CreateNatGateway: !Equals [!Ref EnableNatGateway, 'true']
+
+Resources:
+  # Fixed CIDRs match the upstream SQL host grants / CIDR compatibles avec les droits SQL du lab.
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.10.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-vpc'}
+        - {Key: Project, Value: !Ref ProjectName}
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-igw'}
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  BastionSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref AvailabilityZoneA
+      CidrBlock: 10.10.0.0/28
+      MapPublicIpOnLaunch: true
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-bastion-subnet'}
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref AvailabilityZoneA
+      CidrBlock: 10.10.1.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-public-a'}
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref AvailabilityZoneB
+      CidrBlock: 10.10.2.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-public-b'}
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref AvailabilityZoneA
+      CidrBlock: 10.10.11.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-private-a'}
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref AvailabilityZoneB
+      CidrBlock: 10.10.12.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-private-b'}
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-public-rt'}
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  BastionRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref BastionSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicARouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicBRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-private-rt'}
+
+  PrivateARouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateBRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+
+  # One zonal NAT for this temporary lab / un seul NAT zonal pour ce lab temporaire.
+  NatElasticIp:
+    Type: AWS::EC2::EIP
+    Condition: CreateNatGateway
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-nat-eip'}
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Condition: CreateNatGateway
+    DependsOn: [PublicDefaultRoute, PublicARouteAssociation]
+    Properties:
+      AvailabilityMode: zonal
+      ConnectivityType: public
+      AllocationId: !GetAtt NatElasticIp.AllocationId
+      SubnetId: !Ref PublicSubnetA
+      Tags:
+        - {Key: Name, Value: !Sub '${ProjectName}-nat'}
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Condition: CreateNatGateway
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+Outputs:
+  VpcId:
+    Description: Select this VPC for all later resources / VPC pour la suite du lab.
+    Value: !Ref Vpc
+  AvailabilityZoneA:
+    Value: !Ref AvailabilityZoneA
+  AvailabilityZoneB:
+    Value: !Ref AvailabilityZoneB
+  BastionSubnetId:
+    Description: Public SSH bastion subnet / sous-reseau public du bastion SSH.
+    Value: !Ref BastionSubnet
+  PublicSubnetAId:
+    Description: ALB public subnet A / sous-reseau public A pour ALB.
+    Value: !Ref PublicSubnetA
+  PublicSubnetBId:
+    Description: ALB public subnet B / sous-reseau public B pour ALB.
+    Value: !Ref PublicSubnetB
+  PrivateSubnetAId:
+    Description: Web A and DB subnet group / serveur web A et groupe de sous-reseaux RDS.
+    Value: !Ref PrivateSubnetA
+  PrivateSubnetBId:
+    Description: Web B and DB subnet group / serveur web B et groupe de sous-reseaux RDS.
+    Value: !Ref PrivateSubnetB
+  PublicRouteTableId:
+    Value: !Ref PublicRouteTable
+  PrivateRouteTableId:
+    Value: !Ref PrivateRouteTable
+  NatGatewayEnabled:
+    Value: !Ref EnableNatGateway
+  NatGatewayId:
+    Condition: CreateNatGateway
+    Value: !Ref NatGateway
+  NatPublicIp:
+    Condition: CreateNatGateway
+    Value: !Ref NatElasticIp
