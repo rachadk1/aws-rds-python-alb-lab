@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Public ALB in two Availability Zones / ALB public dans deux zones de disponibilite
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnetAId:
+    Type: AWS::EC2::Subnet::Id
+  PublicSubnetBId:
+    Type: AWS::EC2::Subnet::Id
+  AlbSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+  WebAInstanceId:
+    Type: AWS::EC2::Instance::Id
+  WebBInstanceId:
+    Type: AWS::EC2::Instance::Id
+  ApplicationPort:
+    Type: Number
+    AllowedValues: [8080]
+
+Rules:
+  DistinctSubnets:
+    Assertions:
+      - Assert: !Not [!Equals [!Ref PublicSubnetAId, !Ref PublicSubnetBId]]
+        AssertDescription: Two distinct public subnets / Deux sous-reseaux publics distincts.
+  DistinctTargets:
+    Assertions:
+      - Assert: !Not [!Equals [!Ref WebAInstanceId, !Ref WebBInstanceId]]
+        AssertDescription: Two distinct instances / Deux instances distinctes.
+
+Resources:
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      IpAddressType: ipv4
+      Subnets: [!Ref PublicSubnetAId, !Ref PublicSubnetBId]
+      SecurityGroups: [!Ref AlbSecurityGroupId]
+      Tags:
+        - {Key: Name, Value: lab6-alb}
+
+  WebTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VpcId
+      TargetType: instance
+      Protocol: HTTP
+      Port: !Ref ApplicationPort
+      Targets:
+        - Id: !Ref WebAInstanceId
+        - Id: !Ref WebBInstanceId
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: '200'
+      Tags:
+        - {Key: Name, Value: lab6-web-tg}
+
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebTargetGroup
+
+Outputs:
+  ApplicationUrl:
+    Description: Public HTTP URL / URL HTTP publique.
+    Value: !Sub 'http://${ApplicationLoadBalancer.DNSName}'
+  TargetGroupArn:
+    Value: !Ref WebTargetGroup
