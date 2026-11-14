@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy Flask to the two private web instances / Deployer Flask sur les deux EC2 privees
+
+Parameters:
+  RdsEndpoint:
+    Type: String
+    AllowedPattern: '[a-zA-Z0-9.-]+\.us-east-2\.rds\.amazonaws\.com'
+  AppSecretArn:
+    Type: String
+    AllowedPattern: 'arn:aws:secretsmanager:us-east-2:[0-9]{12}:secret:[a-zA-Z0-9/_+=.@-]+'
+  WebAInstanceId:
+    Type: AWS::EC2::Instance::Id
+  WebBInstanceId:
+    Type: AWS::EC2::Instance::Id
+  DeploymentRevision:
+    Type: String
+    AllowedPattern: '[0-9a-f]{64}'
+
+Resources:
+  ApplicationDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Command
+      UpdateMethod: NewVersion
+      TargetType: /AWS::EC2::Instance
+      Content:
+        schemaVersion: '2.2'
+        description: Install and verify Flask / Installer et verifier Flask
+        parameters:
+          Revision:
+            type: String
+            allowedPattern: '^[0-9a-f]{64}$'
+        mainSteps:
+          - action: aws:runShellScript
+            name: InstallAndCheck
+            inputs:
+              timeoutSeconds: '900'
+              runCommand:
+                - Fn::Sub: |
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    export LAB_REGION='${AWS::Region}'
+                    export LAB_DB_HOST='${RdsEndpoint}'
+                    export LAB_SECRET_ARN='${AppSecretArn}'
+                    printf 'Application deployment / Deploiement application: %s\n' '{{ Revision }}'
+                    LAB_STAGE="$(mktemp -d)"
+                    trap 'rm -rf -- "$LAB_STAGE"' EXIT
+                    printf '%s' '__LAB_APP_BUNDLE__' | base64 -d | tar -xzf - -C "$LAB_STAGE"
+                    bash "$LAB_STAGE/install.sh"
+
+  WebAApplication:
+    Type: AWS::SSM::Association
+    Properties:
+      Name: !Ref ApplicationDocument
+      DocumentVersion: '$LATEST'
+      Parameters:
+        Revision: [!Ref DeploymentRevision]
+      Targets:
+        - Key: InstanceIds
+          Values: [!Ref WebAInstanceId]
+      WaitForSuccessTimeoutSeconds: 1200
+
+  WebBApplication:
+    Type: AWS::SSM::Association
+    Properties:
+      Name: !Ref ApplicationDocument
+      DocumentVersion: '$LATEST'
+      Parameters:
+        Revision: [!Ref DeploymentRevision]
+      Targets:
+        - Key: InstanceIds
+          Values: [!Ref WebBInstanceId]
+      WaitForSuccessTimeoutSeconds: 1200
+
+Outputs:
+  WebAAssociationId:
+    Value: !Ref WebAApplication
+  WebBAssociationId:
+    Value: !Ref WebBApplication
+  ApplicationPort:
+    Value: '8080'

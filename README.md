@@ -8,15 +8,15 @@ This learning project manages infrastructure through staged CloudFormation templ
 
 ## Current scope
 
-**Stages 01–03 deployed with CREATE_COMPLETE. All three EC2 status checks and SSH tests passed using the existing key; private web servers are reached through the bastion. Stage 04A RDS is available with private access and encrypted storage. Stage 04B SQL automation is prepared; SQL tests and application stages remain to be completed.**
+**Stages 01–03 are deployed and SSH is verified. Stage 04A RDS is available with private access and encrypted storage. Stage 04B initialized the database and validated TLS and the application account permissions from both web servers. Stage 05 adds the Python deployment and its per-instance checks.**
 
 | Stage | Deliverable | State |
 |---|---|---|
 | 01 | VPC, five subnets, routing and optional NAT Gateway | Deployed: CREATE_COMPLETE |
 | 02 | Four security groups and restricted traffic paths | Deployed: CREATE_COMPLETE |
 | 03 | Existing SSH key, bastion and two private web servers | Deployed; EC2 checks and three SSH tests passed |
-| 04 | Private RDS MySQL and least-privilege application account | 04A: RDS available; 04B SQL automation ready, deployment/tests pending |
-| 05 | Python application and TLS database connection | Planned |
+| 04 | Private RDS MySQL and least-privilege application account | RDS available and SQL tests passed on both web instances |
+| 05 | Python application and TLS database connection | Automation ready; AWS validation pending |
 | 06 | ALB, target group and health checks | Planned |
 | 07 | Failure tests, evidence and complete cleanup | Planned |
 
@@ -31,6 +31,7 @@ This learning project manages infrastructure through staged CloudFormation templ
 - [Stage 03: reuse the SSH key and deploy EC2](docs/en/03-ec2.md).
 - [Stage 04: understand and deploy RDS](docs/en/04-rds.md).
 - [Stage 04B: automate SQL initialization and tests](docs/en/04b-sql-bootstrap.md).
+- [Stage 05: deploy Flask and verify TLS](docs/en/05-python.md).
 - [SQL bootstrap CloudFormation template](cloudformation/04b-sql-bootstrap.yaml).
 - [RDS CloudFormation template](cloudformation/04-rds.yaml).
 - [RDS deployment script](scripts/deploy-rds.sh).
