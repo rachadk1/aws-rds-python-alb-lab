@@ -8,6 +8,12 @@ LAB_REGION=us-east-2
 LAB_STACK=lab6-alb
 LAB_TEMPLATE=cloudformation/06-alb.yaml
 fail() { printf 'ERROR / ERREUR: %s\n' "$1" >&2; exit 1; }
+case "${1:-}" in
+  '') LAB_WEB_A_PORT=8080 ;;
+  --simulate-web-a-failure) LAB_WEB_A_PORT=8081 ;;
+  *) fail 'Usage: bash scripts/deploy-alb.sh [--simulate-web-a-failure]' ;;
+esac
+[[ $# -le 1 ]] || fail 'Usage: bash scripts/deploy-alb.sh [--simulate-web-a-failure]'
 command -v aws >/dev/null || fail 'AWS CLI is required / AWS CLI est requis.'
 
 aws_lab() { aws "$@" --region "$LAB_REGION" --no-cli-pager; }
@@ -33,7 +39,7 @@ aws_lab cloudformation validate-template --template-body "file://$LAB_TEMPLATE" 
   --query Description --output text
 aws_lab cloudformation deploy --template-file "$LAB_TEMPLATE" --stack-name "$LAB_STACK" \
   --parameter-overrides VpcId="$LAB_VPC" PublicSubnetAId="$LAB_SUBNET_A" PublicSubnetBId="$LAB_SUBNET_B" \
-    AlbSecurityGroupId="$LAB_ALB_SG" WebAInstanceId="$LAB_WEB_A" WebBInstanceId="$LAB_WEB_B" ApplicationPort="$LAB_PORT" \
+    AlbSecurityGroupId="$LAB_ALB_SG" WebAInstanceId="$LAB_WEB_A" WebBInstanceId="$LAB_WEB_B" ApplicationPort="$LAB_PORT" WebATargetPort="$LAB_WEB_A_PORT" \
   --tags Project=lab6 Purpose=Learning --no-fail-on-empty-changeset
 
 printf '\nApplication URL / URL de l’application: %s\n' "$(stack_output "$LAB_STACK" ApplicationUrl)"

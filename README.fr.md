@@ -18,7 +18,7 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 | 04 | RDS MySQL privé et compte applicatif aux droits limités | RDS disponible et tests SQL réussis sur les deux serveurs web |
 | 05 | Application Python et connexion TLS à la base | Déployée, Flask et TLS vers RDS vérifiés sur les deux EC2 |
 | 06 | ALB, groupe cible et contrôles de santé | Template et script prêts, validation AWS à faire |
-| 07 | Tests de panne, preuves et nettoyage complet | Prévu |
+| 07 | Panne d’une cible, rétablissement et nettoyage | Scripts prêts, validation AWS à faire |
 
 ## Branches et documentation
 
@@ -33,6 +33,7 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 - [Étape 04B : automatiser l’initialisation et les tests SQL](docs/04b-sql-bootstrap.md).
 - [Étape 05 : déployer Flask et vérifier TLS](docs/05-python.md).
 - [Étape 06 : déployer l’ALB et vérifier les deux cibles](docs/06-alb.md).
+- [Étape 07 : tester le basculement et nettoyer](docs/07-failover-cleanup.md).
 - [Template CloudFormation initialisation SQL](cloudformation/04b-sql-bootstrap.yaml).
 - [Template CloudFormation RDS](cloudformation/04-rds.yaml).
 - [Script de déploiement RDS](scripts/deploy-rds.sh).
