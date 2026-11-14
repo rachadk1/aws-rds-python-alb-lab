@@ -8,7 +8,7 @@ This learning project manages infrastructure through staged CloudFormation templ
 
 ## Current scope
 
-**Stages 01–03 are deployed and SSH is verified. Stage 04A RDS is available with private access and encrypted storage. Stage 04B initialized the database and validated TLS and the application account permissions from both web servers. Stage 05 adds the Python deployment and its per-instance checks.**
+**Stages 01–03 are deployed and SSH is verified. Stage 04A RDS is available with private access and encrypted storage. Stage 04B initialized the database and validated TLS and the application account permissions from both web servers. Stage 05 deployed Flask and verified the shared RDS connection over TLS from both private web servers. Stage 06 adds the public ALB.**
 
 | Stage | Deliverable | State |
 |---|---|---|
@@ -16,8 +16,8 @@ This learning project manages infrastructure through staged CloudFormation templ
 | 02 | Four security groups and restricted traffic paths | Deployed: CREATE_COMPLETE |
 | 03 | Existing SSH key, bastion and two private web servers | Deployed; EC2 checks and three SSH tests passed |
 | 04 | Private RDS MySQL and least-privilege application account | RDS available and SQL tests passed on both web instances |
-| 05 | Python application and TLS database connection | Automation ready; AWS validation pending |
-| 06 | ALB, target group and health checks | Planned |
+| 05 | Python application and TLS database connection | Deployed; Flask and RDS TLS verified on both EC2 instances |
+| 06 | ALB, target group and health checks | Template and verification script ready; AWS validation pending |
 | 07 | Failure tests, evidence and complete cleanup | Planned |
 
 ## Branches and documentation
@@ -32,6 +32,7 @@ This learning project manages infrastructure through staged CloudFormation templ
 - [Stage 04: understand and deploy RDS](docs/en/04-rds.md).
 - [Stage 04B: automate SQL initialization and tests](docs/en/04b-sql-bootstrap.md).
 - [Stage 05: deploy Flask and verify TLS](docs/en/05-python.md).
+- [Stage 06: deploy the ALB and verify both targets](docs/en/06-alb.md).
 - [SQL bootstrap CloudFormation template](cloudformation/04b-sql-bootstrap.yaml).
 - [RDS CloudFormation template](cloudformation/04-rds.yaml).
 - [RDS deployment script](scripts/deploy-rds.sh).

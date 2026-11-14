@@ -8,7 +8,7 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 
 ## Périmètre actuel
 
-**Les étapes 01 à 03 sont déployées et les accès SSH vérifiés. RDS est disponible en accès privé avec stockage chiffré (04A). L’étape 04B a initialisé la base et validé TLS et les droits du compte applicatif depuis les deux serveurs web. L’étape 05 ajoute le déploiement Python et ses tests sur chaque instance.**
+**Les étapes 01 à 03 sont déployées et les accès SSH vérifiés. RDS est disponible en accès privé avec stockage chiffré (04A). L’étape 04B a initialisé la base et validé TLS et les droits du compte applicatif depuis les deux serveurs web. L’étape 05 a déployé Flask et vérifié la connexion TLS à RDS depuis les deux serveurs web privés. L’étape 06 ajoute l’ALB public.**
 
 | Étape | Résultat | État |
 |---|---|---|
@@ -16,8 +16,8 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 | 02 | Quatre groupes de sécurité et flux restreints | Déployé : CREATE_COMPLETE |
 | 03 | Clé SSH existante, bastion et deux serveurs web privés | Déployé ; contrôles EC2 et trois tests SSH réussis |
 | 04 | RDS MySQL privé et compte applicatif aux droits limités | RDS disponible et tests SQL réussis sur les deux serveurs web |
-| 05 | Application Python et connexion TLS à la base | Déploiement automatisé prêt, validation AWS à faire |
-| 06 | ALB, groupe cible et contrôles de santé | Prévu |
+| 05 | Application Python et connexion TLS à la base | Déployée, Flask et TLS vers RDS vérifiés sur les deux EC2 |
+| 06 | ALB, groupe cible et contrôles de santé | Template et script prêts, validation AWS à faire |
 | 07 | Tests de panne, preuves et nettoyage complet | Prévu |
 
 ## Branches et documentation
@@ -32,6 +32,7 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 - [Étape 04 : comprendre et déployer RDS](docs/04-rds.md).
 - [Étape 04B : automatiser l’initialisation et les tests SQL](docs/04b-sql-bootstrap.md).
 - [Étape 05 : déployer Flask et vérifier TLS](docs/05-python.md).
+- [Étape 06 : déployer l’ALB et vérifier les deux cibles](docs/06-alb.md).
 - [Template CloudFormation initialisation SQL](cloudformation/04b-sql-bootstrap.yaml).
 - [Template CloudFormation RDS](cloudformation/04-rds.yaml).
 - [Script de déploiement RDS](scripts/deploy-rds.sh).
