@@ -18,7 +18,7 @@ This learning project manages infrastructure through staged CloudFormation templ
 | 04 | Private RDS MySQL and least-privilege application account | RDS available and SQL tests passed on both web instances |
 | 05 | Python application and TLS database connection | Deployed; Flask and RDS TLS verified on both EC2 instances |
 | 06 | ALB, target group and health checks | Template and verification script ready; AWS validation pending |
-| 07 | Failure tests, evidence and complete cleanup | Planned |
+| 07 | Web target failure, recovery and cleanup | Scripts ready; AWS validation pending |
 
 ## Branches and documentation
 
@@ -33,6 +33,7 @@ This learning project manages infrastructure through staged CloudFormation templ
 - [Stage 04B: automate SQL initialization and tests](docs/en/04b-sql-bootstrap.md).
 - [Stage 05: deploy Flask and verify TLS](docs/en/05-python.md).
 - [Stage 06: deploy the ALB and verify both targets](docs/en/06-alb.md).
+- [Stage 07: test failover and clean up](docs/en/07-failover-cleanup.md).
 - [SQL bootstrap CloudFormation template](cloudformation/04b-sql-bootstrap.yaml).
 - [RDS CloudFormation template](cloudformation/04-rds.yaml).
 - [RDS deployment script](scripts/deploy-rds.sh).

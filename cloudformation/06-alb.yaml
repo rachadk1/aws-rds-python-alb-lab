@@ -17,6 +17,11 @@ Parameters:
   ApplicationPort:
     Type: Number
     AllowedValues: [8080]
+  WebATargetPort:
+    Type: Number
+    Default: 8080
+    AllowedValues: [8080, 8081]
+    Description: WebA port for the failure exercise / Port de WebA pour le test de panne.
 
 Rules:
   DistinctSubnets:
@@ -49,6 +54,7 @@ Resources:
       Port: !Ref ApplicationPort
       Targets:
         - Id: !Ref WebAInstanceId
+          Port: !Ref WebATargetPort
         - Id: !Ref WebBInstanceId
       HealthCheckProtocol: HTTP
       HealthCheckPort: traffic-port
