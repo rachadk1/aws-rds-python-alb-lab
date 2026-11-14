@@ -13,9 +13,8 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Existing EC2 key pair from the first lab in Ohio / paire existante du premier lab dans Ohio.
   LatestAl2023Ami:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
-    Description: Amazon Linux 2023 x86_64 AMI / AMI Amazon Linux 2023 x86_64.
+    Type: AWS::EC2::Image::Id
+    Description: Pinned Amazon Linux 2023 AMI / AMI Amazon Linux 2023 conservee lors des mises a jour.
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: Existing lab VPC / VPC existant du lab.
@@ -34,6 +33,18 @@ Parameters:
   WebSecurityGroupId:
     Type: AWS::EC2::SecurityGroup::Id
     Description: Web group from stage 02 / groupe web de l'etape 02.
+  BastionInstanceProfileName:
+    Type: String
+    Default: ''
+    Description: Optional profile from SQL bootstrap stack / profil optionnel de la stack SQL.
+  WebInstanceProfileName:
+    Type: String
+    Default: ''
+    Description: Optional web profile from SQL bootstrap stack / profil web optionnel de la stack SQL.
+
+Conditions:
+  AttachBastionProfile: !Not [!Equals [!Ref BastionInstanceProfileName, '']]
+  AttachWebProfile: !Not [!Equals [!Ref WebInstanceProfileName, '']]
 
 Resources:
   # No KeyPair resource: the existing key remains external / la cle existante reste hors de la stack.
@@ -43,6 +54,7 @@ Resources:
       ImageId: !Ref LatestAl2023Ami
       InstanceType: t3.micro
       KeyName: !Ref KeyName
+      IamInstanceProfile: !If [AttachBastionProfile, !Ref BastionInstanceProfileName, !Ref 'AWS::NoValue']
       CreditSpecification:
         CPUCredits: standard
       MetadataOptions:
@@ -74,6 +86,7 @@ Resources:
       ImageId: !Ref LatestAl2023Ami
       InstanceType: t3.micro
       KeyName: !Ref KeyName
+      IamInstanceProfile: !If [AttachWebProfile, !Ref WebInstanceProfileName, !Ref 'AWS::NoValue']
       CreditSpecification:
         CPUCredits: standard
       MetadataOptions:
@@ -105,6 +118,7 @@ Resources:
       ImageId: !Ref LatestAl2023Ami
       InstanceType: t3.micro
       KeyName: !Ref KeyName
+      IamInstanceProfile: !If [AttachWebProfile, !Ref WebInstanceProfileName, !Ref 'AWS::NoValue']
       CreditSpecification:
         CPUCredits: standard
       MetadataOptions:
