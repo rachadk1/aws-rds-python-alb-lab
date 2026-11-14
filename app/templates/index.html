@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ 'Inscriptions' if lang == 'fr' else 'Course registration' }}</title>
+  <style>
+    body { margin: 2rem auto; padding: 0 1rem; max-width: 48rem; font: 1rem/1.5 system-ui,sans-serif; color: #182030; }
+    header, section { border-bottom: 1px solid #cbd5e1; padding: 0 0 1rem; margin: 0 0 1.5rem; }
+    form { display: grid; gap: .75rem; max-width: 30rem; }
+    label { display: grid; gap: .25rem; }
+    input, select, button { padding: .5rem; font: inherit; }
+    button { justify-self: start; background: #173c74; color: white; border: 0; border-radius: .25rem; }
+  </style>
+</head>
+<body>
+  {% set fr = lang == 'fr' %}
+  <header>
+    <a href="{{ '/?lang=en' if fr else '/?lang=fr' }}" hreflang="{{ 'en' if fr else 'fr' }}">{{ 'English' if fr else 'Français' }}</a>
+    <h1>{{ 'Inscriptions aux cours' if fr else 'Course registration' }}</h1>
+    <p>{{ 'Serveur' if fr else 'Served by' }} <code>{{ node.served_by }}</code> · {{ node.az }}</p>
+  </header>
+  {% if available %}
+  <section>
+    <h2>{{ 'Inscrire un étudiant' if fr else 'Register a student' }}</h2>
+    <p>{{ 'Utilise des données fictives pour ce lab.' if fr else 'Use fictional data for this lab.' }}</p>
+    <form id="registration">
+      <label>{{ 'Nom complet' if fr else 'Full name' }} <input name="full_name" maxlength="100" required></label>
+      <label>{{ 'Courriel' if fr else 'Email' }} <input type="email" name="email" maxlength="120" required></label>
+      <label>{{ 'Ville (facultatif)' if fr else 'City (optional)' }} <input name="city" maxlength="60"></label>
+      <label>{{ 'Cours' if fr else 'Course' }}
+        <select name="course_id" required>
+          {% for course in courses %}
+          <option value="{{ course.id }}">{{ course.code }} · {{ course.title }} ({{ course.hours }} h)</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button>{{ 'Inscrire' if fr else 'Register' }}</button>
+    </form>
+    <p id="result" role="status"></p>
+  </section>
+  <section>
+    <h2>{{ 'Derniers inscrits' if fr else 'Recent registrations' }}</h2>
+    <ul id="students">
+      {% for student in students %}<li>{{ student.full_name }}</li>{% endfor %}
+    </ul>
+  </section>
+  <script>
+    const form = document.querySelector('#registration');
+    const result = document.querySelector('#result');
+    const button = form.querySelector('button');
+    const messages = {{ ({
+      'duplicate_email': 'Ce courriel est déjà inscrit.' if fr else 'This email is already registered.',
+      'invalid_input': 'Vérifie les champs du formulaire.' if fr else 'Check the form fields.',
+      'invalid_course': 'Ce cours est indisponible.' if fr else 'This course is unavailable.',
+      'database_unavailable': 'La base de données est indisponible.' if fr else 'The database is unavailable.',
+      'registered': 'Inscription enregistrée. Serveur' if fr else 'Registration saved. Server',
+      'failed': 'Impossible de terminer l’inscription.' if fr else 'Could not complete registration.'
+    }) | tojson }};
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      button.disabled = true;
+      result.textContent = '';
+      try {
+        const data = Object.fromEntries(new FormData(form));
+        data.course_id = Number(data.course_id);
+        const response = await fetch('/students', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        const body = await response.json();
+        if (response.status !== 201) {
+          result.textContent = messages[body.error] || messages.failed;
+          return;
+        }
+        result.textContent = messages.registered + ' ' + body.served_by;
+        const row = document.createElement('li');
+        row.textContent = data.full_name.trim();
+        document.querySelector('#students').prepend(row);
+        form.reset();
+      } catch {
+        result.textContent = messages.failed;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+  {% else %}
+  <p role="alert">{{ 'La base de données est indisponible.' if fr else 'The database is unavailable.' }}</p>
+  {% endif %}
+</body>
+</html>

@@ -1,0 +1,22 @@
+[Unit]
+Description=Lab6 Flask application / Application Flask du Lab6
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=labapp
+Group=labapp
+WorkingDirectory=/opt/lab6-app/current
+EnvironmentFile=/opt/lab6-app/current/labapp.env
+LoadCredential=db.json:/opt/lab6-app/current/db.json
+ExecStart=/opt/lab6-app/current/venv/bin/gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 20 labapp:app
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target
