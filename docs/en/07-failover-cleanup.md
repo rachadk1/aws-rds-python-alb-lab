@@ -52,6 +52,22 @@ Stack deletion order:
 
 The script prints `CLEANUP_OK` after processing the stacks and checking for the absence of the `lab6-mysql` instance, automated backups, and manual snapshots. It reports any existing manual snapshot for review. If a stack fails to delete, the script stops and prints available deletion failure events. After addressing the issue, run the same command again.
 
+## Recorded results
+
+WebB served all 10 measured requests with HTTP 200 after WebA became unhealthy. Both targets recovered on port 8080. The cleanup script confirmed the deletion of seven CloudFormation stacks and the absence of the lab database, automated backups and manual snapshots. The application continued to read 13 students from RDS over TLS during failover.
+
+![Preview of the seven stacks selected for deletion in us-east-2.](../evidence/cleanup-preview.png)
+
+*Preview of the seven stacks selected for deletion in us-east-2.*
+
+![Git Bash reports CLEANUP_OK and empty RDS lists.](../evidence/cleanup-cli.png)
+
+*Git Bash reports CLEANUP_OK and empty RDS lists.*
+
+![All seven lab stacks show DELETE_COMPLETE in CloudFormation.](../evidence/cleanup-console.png)
+
+*All seven lab stacks show DELETE_COMPLETE in CloudFormation.*
+
 ## GitHub
 
 Push the branch and open a PR with `develop` as its base. Add the results before, during, and after the test, then the cleanup result if you ran it.

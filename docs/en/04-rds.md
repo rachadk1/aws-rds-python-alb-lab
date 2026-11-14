@@ -147,6 +147,10 @@ Read the exact cause before retrying. Investigate and delete a `ROLLBACK_COMPLET
 
 On November 6, 2026, AWS CLI confirmed: instance `available`, MySQL `8.4.13`, database `labapp`, port 3306, encrypted storage, public access disabled and Single-AZ. SQL tests remain for 04B.
 
+![The lab6-mysql MySQL instance is available in us-east-2a. The Multi-AZ column shows No.](../evidence/rds-mysql.png)
+
+*The lab6-mysql MySQL instance is available in us-east-2a. The Multi-AZ column shows No.*
+
 ## 6. Git and the remainder of this stage
 
 Stay on `infra/04-rds` for 04A and 04B. After verifying this first part, an intermediate commit is possible:

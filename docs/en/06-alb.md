@@ -37,6 +37,20 @@ aws cloudformation delete-stack --stack-name lab6-alb --region us-east-2
 aws cloudformation wait stack-delete-complete --stack-name lab6-alb --region us-east-2
 ```
 
+## Browser validation
+
+![All seven CloudFormation stacks after deployment.](../evidence/cloudformation-stacks.png)
+
+*All seven CloudFormation stacks after deployment.*
+
+![Server 1 (WebA) in us-east-2a.](../evidence/alb-weba.png)
+
+*Server 1 (WebA) in us-east-2a.*
+
+![Server 2 (WebB) in us-east-2b. It displays the same registrations as WebA.](../evidence/alb-webb.png)
+
+*Server 2 (WebB) in us-east-2b. It displays the same registrations as WebA.*
+
 ## GitHub
 
 After the tests pass, push `infra/06-alb` and open a PR with **base `develop`** and **compare `infra/06-alb`**. Record both AZs and the response count per server in the PR.

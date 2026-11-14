@@ -117,6 +117,10 @@ aws cloudformation describe-stack-events \
 
 After `ROLLBACK_COMPLETE`, fix the cause, then delete the failed stack before recreating it. Do not manually modify resources managed by this stack. Return to the [Git workflow](git-workflow.md) for the commit and PR.
 
+![Lab VPC resource map with five subnets, route tables, the internet gateway, and the NAT gateway.](../evidence/vpc-resource-map.png)
+
+*Lab VPC resource map with five subnets, route tables, the internet gateway, and the NAT gateway.*
+
 ## 5. End the session and clean up
 
 To disable NAT while keeping the network, rerun the deployment command with the **same AZs**, but `EnableNatGateway=false`. CloudFormation removes the private default route, NAT and EIP. Private EC2 instances then lose Internet egress through this NAT. This does not delete or stop separately created EC2, RDS or ALB resources.
