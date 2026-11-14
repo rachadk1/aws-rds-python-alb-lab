@@ -4,11 +4,11 @@
 
 Build a Flask application on two private EC2 instances, store its data in private Amazon RDS for MySQL, and serve traffic through an internet-facing Application Load Balancer in **us-east-2 (Ohio)**.
 
-This learning project manages infrastructure through staged CloudFormation templates deployed from Git Bash. Security groups, EC2, RDS, ALB and application bootstrap will be automated as the stages progress. AWS console provisioning is not required.
+This learning project manages infrastructure through staged CloudFormation templates deployed from Git Bash. Security groups, EC2, RDS, ALB and application bootstrap are automated through CloudFormation. AWS console provisioning is not required.
 
 ## Current scope
 
-**Stages 01–03 are deployed and SSH is verified. Stage 04A RDS is available with private access and encrypted storage. Stage 04B initialized the database and validated TLS and the application account permissions from both web servers. Stage 05 deployed Flask and verified the shared RDS connection over TLS from both private web servers. Stage 06 adds the public ALB.**
+Deployment, failover, and cleanup were verified in us-east-2.
 
 | Stage | Deliverable | State |
 |---|---|---|
@@ -17,8 +17,8 @@ This learning project manages infrastructure through staged CloudFormation templ
 | 03 | Existing SSH key, bastion and two private web servers | Deployed; EC2 checks and three SSH tests passed |
 | 04 | Private RDS MySQL and least-privilege application account | RDS available and SQL tests passed on both web instances |
 | 05 | Python application and TLS database connection | Deployed; Flask and RDS TLS verified on both EC2 instances |
-| 06 | ALB, target group and health checks | Template and verification script ready; AWS validation pending |
-| 07 | Web target failure, recovery and cleanup | Scripts ready; AWS validation pending |
+| 06 | ALB, target group and health checks | Both targets verified via the ALB |
+| 07 | Web target failure, recovery and cleanup | Failover, recovery and cleanup verified |
 
 ## Branches and documentation
 
@@ -43,13 +43,12 @@ This learning project manages infrastructure through staged CloudFormation templ
 - [Security CloudFormation template](cloudformation/02-security-groups.yaml).
 - [Security deployment script](scripts/deploy-security-groups.sh).
 
-These links become available as the repository and corresponding branches are pushed. Files for later stages are added only when that work is completed.
 
 ## Learning goals and limits
 
 Practice AWS networking, managed databases, security-group references, SSH ProxyJump, SQL permissions, TLS, load balancing, troubleshooting and Git pull requests.
 
-Two web servers span two Availability Zones. The planned database is **Single-AZ**, and the network uses **one zonal NAT Gateway**: this is a temporary learning design, not an end-to-end highly available production deployment. Cross-AZ NAT traffic can add data-transfer charges.
+Two web servers span two Availability Zones. The database is **Single-AZ**, and the network uses **one zonal NAT Gateway**: this is a temporary learning design, not an end-to-end highly available production deployment. Cross-AZ NAT traffic can add data-transfer charges.
 
 The NAT Gateway, public IPv4 addresses and later compute, RDS and ALB resources can incur charges. NAT is disabled by default in the template. Enable it when ready to install the private web servers, and delete the resources after the lab. Never commit credentials, database passwords or private SSH keys.
 
