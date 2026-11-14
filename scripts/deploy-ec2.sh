@@ -52,6 +52,26 @@ for LAB_SG in "$LAB_BASTION_SG" "$LAB_WEB_SG"; do
   [[ "$LAB_SG" =~ ^sg-([0-9a-f]{8}|[0-9a-f]{17})$ ]] || fail 'Missing or invalid security group output / sortie de groupe absente ou invalide.'
 done
 
+# Pin the running AMI and preserve attached profiles on repeat deployment / conserver AMI et profils existants.
+LAB_EC2_MATCH="$(aws cloudformation describe-stacks --region "$LAB_REGION" \
+  --query "Stacks[?StackName=='$LAB_EC2_STACK'].StackName" --output json --no-cli-pager)"
+LAB_BASTION_PROFILE=''
+LAB_WEB_PROFILE=''
+if [[ "$LAB_EC2_MATCH" == '[]' ]]; then
+  LAB_AMI_ID="$(aws ssm get-parameter \
+    --name /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64 \
+    --query Parameter.Value --output text --region "$LAB_REGION" --no-cli-pager)"
+else
+  LAB_AMI_ID="$(stack_output "$LAB_EC2_STACK" AmiId)"
+  LAB_BASTION_PROFILE="$(aws cloudformation describe-stacks --stack-name "$LAB_EC2_STACK" --region "$LAB_REGION" \
+    --query 'Stacks[0].Parameters[?ParameterKey==`BastionInstanceProfileName`].ParameterValue | [0]' --output text --no-cli-pager)"
+  LAB_WEB_PROFILE="$(aws cloudformation describe-stacks --stack-name "$LAB_EC2_STACK" --region "$LAB_REGION" \
+    --query 'Stacks[0].Parameters[?ParameterKey==`WebInstanceProfileName`].ParameterValue | [0]' --output text --no-cli-pager)"
+  [[ "$LAB_BASTION_PROFILE" != None ]] || LAB_BASTION_PROFILE=''
+  [[ "$LAB_WEB_PROFILE" != None ]] || LAB_WEB_PROFILE=''
+fi
+[[ "$LAB_AMI_ID" =~ ^ami-([0-9a-f]{8}|[0-9a-f]{17})$ ]] || fail 'Invalid AMI ID / ID AMI invalide.'
+
 printf 'Region: %s\nVPC: %s\nExisting key / cle existante: %s\nStack: %s\n' \
   "$LAB_REGION" "$LAB_VPC_ID" "$LAB_KEY_NAME" "$LAB_EC2_STACK"
 printf 'Creating 3 billable EC2 instances with EBS / creation de 3 EC2 avec disques EBS facturables.\n'
@@ -59,9 +79,10 @@ aws cloudformation validate-template --template-body file://cloudformation/03-ec
   --query Description --output text --region "$LAB_REGION" --no-cli-pager
 aws cloudformation deploy --template-file cloudformation/03-ec2.yaml \
   --stack-name "$LAB_EC2_STACK" \
-  --parameter-overrides ProjectName=lab6 KeyName="$LAB_KEY_NAME" VpcId="$LAB_VPC_ID" \
+  --parameter-overrides ProjectName=lab6 KeyName="$LAB_KEY_NAME" VpcId="$LAB_VPC_ID" LatestAl2023Ami="$LAB_AMI_ID" \
     BastionSubnetId="$LAB_BASTION_SUBNET" PrivateSubnetAId="$LAB_PRIVATE_A" PrivateSubnetBId="$LAB_PRIVATE_B" \
     BastionSecurityGroupId="$LAB_BASTION_SG" WebSecurityGroupId="$LAB_WEB_SG" \
+    BastionInstanceProfileName="$LAB_BASTION_PROFILE" WebInstanceProfileName="$LAB_WEB_PROFILE" \
   --tags Project=lab6 Purpose=Learning --region "$LAB_REGION" --no-fail-on-empty-changeset
 
 LAB_BASTION_ID="$(stack_output "$LAB_EC2_STACK" BastionInstanceId)"
