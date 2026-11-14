@@ -33,6 +33,10 @@ Une **association SSM** relie un document d'exécution à une instance cible. `W
 
 L'agent SSM est présent sur l'AMI Amazon Linux 2023 utilisée. Il contacte les services AWS en sortie ; aucun nouveau port entrant n'est ajouté pour SSM. Les EC2 privées utilisent le NAT pour SSM, Secrets Manager et les téléchargements. Leur connexion SQL à RDS reste privée, via les routes locales du VPC.
 
+![Secrets Manager affiche deux entrées distinctes pour appuser et le compte administrateur géré par RDS.](evidence/secrets-manager.png)
+
+*Secrets Manager affiche deux entrées distinctes pour appuser et le compte administrateur géré par RDS.*
+
 ## 3. Pourquoi le template EC2 évolue aussi
 
 Les trois EC2 reçoivent un profil IAM via une mise à jour de `lab6-ec2`. Le paramètre de l'AMI devient un ID figé : le script réutilise **l'AMI déjà déployée**, afin que la dernière AMI publique ne soit pas résolue involontairement pendant cette mise à jour.

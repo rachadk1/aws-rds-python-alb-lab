@@ -33,6 +33,10 @@ An **SSM association** connects an execution document to a target instance. `Wai
 
 SSM Agent is present in the Amazon Linux 2023 AMI used here. It contacts AWS services outbound; no new inbound SSM port is added. Private EC2 instances use NAT for SSM, Secrets Manager and downloads. SQL access to RDS remains private through VPC local routes.
 
+![Secrets Manager lists separate entries for appuser and the RDS-managed administrator.](../evidence/secrets-manager.png)
+
+*Secrets Manager lists separate entries for appuser and the RDS-managed administrator.*
+
 ## 3. Why the EC2 template also changes
 
 All three EC2 instances receive a profile through a `lab6-ec2` update. The AMI parameter becomes a pinned ID: the script reuses **the already-deployed AMI**, preventing an unintended refresh of the latest public image during this update.

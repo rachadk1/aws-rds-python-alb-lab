@@ -4,11 +4,11 @@
 
 Déployer une application Flask sur deux instances EC2 privées, stocker ses données dans une base Amazon RDS MySQL privée et distribuer les requêtes avec un Application Load Balancer public dans **us-east-2 (Ohio)**.
 
-Ce projet gère l'infrastructure avec des templates CloudFormation déployés depuis Git Bash. Les groupes de sécurité, EC2, RDS, l'ALB et l'installation applicative seront automatisés au fil des étapes. Aucune création de ressource dans la console AWS n'est requise.
+Ce projet gère l'infrastructure avec des templates CloudFormation déployés depuis Git Bash. Les groupes de sécurité, EC2, RDS, l'ALB et l'installation applicative sont automatisés avec CloudFormation. Aucune création de ressource dans la console AWS n'est requise.
 
 ## Périmètre actuel
 
-**Les étapes 01 à 03 sont déployées et les accès SSH vérifiés. RDS est disponible en accès privé avec stockage chiffré (04A). L’étape 04B a initialisé la base et validé TLS et les droits du compte applicatif depuis les deux serveurs web. L’étape 05 a déployé Flask et vérifié la connexion TLS à RDS depuis les deux serveurs web privés. L’étape 06 ajoute l’ALB public.**
+Le déploiement, le basculement et le nettoyage ont été vérifiés dans us-east-2.
 
 | Étape | Résultat | État |
 |---|---|---|
@@ -17,8 +17,8 @@ Ce projet gère l'infrastructure avec des templates CloudFormation déployés de
 | 03 | Clé SSH existante, bastion et deux serveurs web privés | Déployé ; contrôles EC2 et trois tests SSH réussis |
 | 04 | RDS MySQL privé et compte applicatif aux droits limités | RDS disponible et tests SQL réussis sur les deux serveurs web |
 | 05 | Application Python et connexion TLS à la base | Déployée, Flask et TLS vers RDS vérifiés sur les deux EC2 |
-| 06 | ALB, groupe cible et contrôles de santé | Template et script prêts, validation AWS à faire |
-| 07 | Panne d’une cible, rétablissement et nettoyage | Scripts prêts, validation AWS à faire |
+| 06 | ALB, groupe cible et contrôles de santé | Deux cibles vérifiées via l’ALB |
+| 07 | Panne d’une cible, rétablissement et nettoyage | Basculement, rétablissement et nettoyage vérifiés |
 
 ## Branches et documentation
 
@@ -49,7 +49,7 @@ Les liens deviennent accessibles après la création du dépôt et la publicatio
 
 Pratiquer les réseaux AWS, les bases gérées, les références entre groupes de sécurité, SSH ProxyJump, les droits SQL, TLS, la répartition de charge, le dépannage et les pull requests Git.
 
-Les deux serveurs web seront répartis sur deux zones de disponibilité. La base prévue est **Single-AZ** et le réseau utilise **un seul NAT Gateway zonal** : cette architecture temporaire d'apprentissage n'offre pas une haute disponibilité complète pour la production. Le trafic NAT entre zones peut ajouter des frais de transfert.
+Les deux serveurs web seront répartis sur deux zones de disponibilité. La base est **Single-AZ** et le réseau utilise **un seul NAT Gateway zonal** : cette architecture temporaire d'apprentissage n'offre pas une haute disponibilité complète pour la production. Le trafic NAT entre zones peut ajouter des frais de transfert.
 
 Le NAT Gateway, les adresses IPv4 publiques et, plus tard, EC2, RDS et l'ALB peuvent générer des frais. Le NAT est désactivé par défaut dans le template. Active-le au moment d'installer les serveurs privés et supprime les ressources après le lab. Ne publie jamais d'identifiants, de mots de passe SQL ni de clés SSH privées.
 

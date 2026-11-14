@@ -147,6 +147,10 @@ Lire la cause exacte avant de relancer. Une stack `ROLLBACK_COMPLETE` doit être
 
 Le 6 novembre 2026, AWS CLI a confirmé : instance `available`, MySQL `8.4.13`, base `labapp`, port 3306, stockage chiffré, accès public désactivé et Single-AZ. Les tests SQL restent à effectuer en 04B.
 
+![Instance MySQL lab6-mysql disponible dans us-east-2a. La colonne Multi-AZ indique No.](evidence/rds-mysql.png)
+
+*Instance MySQL lab6-mysql disponible dans us-east-2a. La colonne Multi-AZ indique No.*
+
 ## 6. Git et suite de l'étape
 
 Nous restons sur `infra/04-rds` pour 04A et 04B. Après validation de cette première partie, un commit intermédiaire est possible :
