@@ -52,6 +52,22 @@ Ordre de suppression des stacks :
 
 Le script affiche `CLEANUP_OK` une fois les stacks traitées et après avoir vérifié l’absence d’instance, de sauvegarde automatique et de snapshot manuel pour `lab6-mysql`. Un snapshot manuel préexistant sera signalé pour que tu puisses décider de son sort. Si une stack échoue, le script s’arrête et affiche les événements d’échec de suppression disponibles. Une fois le blocage réglé, relance la même commande.
 
+## Résultats observés
+
+WebB a servi les 10 requêtes mesurées en HTTP 200 après la perte de WebA. Les deux cibles sont redevenues saines sur le port 8080. Le script de nettoyage a confirmé la suppression des sept stacks et l’absence de la base du lab, de sauvegardes automatiques et de snapshots manuels. L’application lisait toujours 13 étudiants dans RDS via TLS pendant le basculement.
+
+![Aperçu des sept stacks ciblées avant suppression dans us-east-2.](evidence/cleanup-preview.png)
+
+*Aperçu des sept stacks ciblées avant suppression dans us-east-2.*
+
+![Git Bash affiche CLEANUP_OK et des listes RDS vides.](evidence/cleanup-cli.png)
+
+*Git Bash affiche CLEANUP_OK et des listes RDS vides.*
+
+![Les sept stacks du lab affichent DELETE_COMPLETE dans CloudFormation.](evidence/cleanup-console.png)
+
+*Les sept stacks du lab affichent DELETE_COMPLETE dans CloudFormation.*
+
 ## GitHub
 
 Publie la branche et ouvre une PR dont la base est `develop`. Ajoute les résultats avant, pendant et après le test, puis le résultat du nettoyage si tu l’as exécuté.

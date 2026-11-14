@@ -37,6 +37,20 @@ aws cloudformation delete-stack --stack-name lab6-alb --region us-east-2
 aws cloudformation wait stack-delete-complete --stack-name lab6-alb --region us-east-2
 ```
 
+## Validation dans le navigateur
+
+![Les sept stacks CloudFormation du lab après le déploiement.](evidence/cloudformation-stacks.png)
+
+*Les sept stacks CloudFormation du lab après le déploiement.*
+
+![Serveur 1 (WebA) dans us-east-2a.](evidence/alb-weba.png)
+
+*Serveur 1 (WebA) dans us-east-2a.*
+
+![Serveur 2 (WebB) dans us-east-2b. Les inscriptions sont les mêmes que sur WebA.](evidence/alb-webb.png)
+
+*Serveur 2 (WebB) dans us-east-2b. Les inscriptions sont les mêmes que sur WebA.*
+
 ## GitHub
 
 Quand les tests ont réussi, publie `infra/06-alb` et ouvre une PR avec **base `develop`** et **compare `infra/06-alb`**. Note les deux AZ et le nombre de réponses par serveur dans la PR.
