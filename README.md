@@ -1,44 +1,29 @@
-# AWS RDS, Python and Application Load Balancer Lab
+# AWS lab with Flask, private RDS and an Application Load Balancer
 
 [Français](README.fr.md) | **English**
 
-Build a Flask application on two private EC2 instances, store its data in private Amazon RDS for MySQL, and serve traffic through an internet-facing Application Load Balancer in **us-east-2 (Ohio)**.
+Completed in **us-east-2 (Ohio)** with CloudFormation and Git Bash. The two Flask servers span two Availability Zones and use TLS to connect to the same Single-AZ database.
 
-This learning project uses CloudFormation for the network foundation. Security groups, EC2, RDS, application deployment, ALB configuration and failure experiments will be completed step by step.
+Browser → public ALB on port 80 → two private EC2 servers on port 8080 → private MySQL RDS on port 3306.
 
-## Current scope
+## Verified results
 
-**Stage 01 is prepared: network foundation. AWS deployment and application stages are not yet verified.**
+WebB served all 10 measured requests with HTTP 200 after WebA became unhealthy. Both targets recovered on port 8080. The cleanup script confirmed the deletion of seven CloudFormation stacks and the absence of the lab database, automated backups and manual snapshots.
 
-| Stage | Deliverable | State |
-|---|---|---|
-| 01 | VPC, five subnets, routing and optional NAT Gateway | Template and instructions prepared |
-| 02 | Four security groups and restricted traffic paths | Planned |
-| 03 | SSH key, bastion and two private web servers | Planned |
-| 04 | Private RDS MySQL and least-privilege application account | Planned |
-| 05 | Python application and TLS database connection | Planned |
-| 06 | ALB, target group and health checks | Planned |
-| 07 | Failure tests, evidence and complete cleanup | Planned |
+## Guides and screenshots
 
-## Branches and documentation
+[develop](https://github.com/rachadk1/aws-rds-python-alb-lab/tree/develop) · [Implementation branches](https://github.com/rachadk1/aws-rds-python-alb-lab/branches)
 
-- [main](https://github.com/rachadk1/aws-rds-python-alb-lab/tree/main): portfolio overview.
-- [develop](https://github.com/rachadk1/aws-rds-python-alb-lab/tree/develop): integrated lab work.
-- `infra/01-network`: first implementation branch; subsequent stages use separate branches and pull requests to `develop`.
-- [Git and GitHub workflow](docs/en/git-workflow.md).
-- [Stage 01: deploy and understand the network](docs/en/01-network.md).
-- [CloudFormation template](cloudformation/01-network.yaml).
+- [VPC and routing](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/01-network.md)
+- [Security groups](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/02-security-groups.md)
+- [Bastion and private EC2](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/03-ec2.md)
+- [Private MySQL RDS](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/04-rds.md)
+- [SQL initialization and permissions](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/04b-sql-bootstrap.md)
+- [Flask deployment and TLS](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/05-python.md)
+- [ALB and browser validation](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/06-alb.md)
+- [Failover and AWS cleanup](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/07-failover-cleanup.md)
+- [Git workflow](https://github.com/rachadk1/aws-rds-python-alb-lab/blob/develop/docs/en/git-workflow.md)
 
-These links become available as the repository and corresponding branches are pushed. Files for later stages are added only when that work is completed.
+## Reference
 
-## Learning goals and limits
-
-Practice AWS networking, managed databases, security-group references, SSH ProxyJump, SQL permissions, TLS, load balancing, troubleshooting and Git pull requests.
-
-Two web servers span two Availability Zones. The planned database is **Single-AZ**, and the network uses **one zonal NAT Gateway**: this is a temporary learning design, not an end-to-end highly available production deployment. Cross-AZ NAT traffic can add data-transfer charges.
-
-The NAT Gateway, public IPv4 addresses and later compute, RDS and ALB resources can incur charges. NAT is disabled by default in the template. Enable it when ready to install the private web servers, and delete the resources after the lab. Never commit credentials, database passwords or private SSH keys.
-
-## Reference and attribution
-
-Learning adaptation of [inspiredevgen's RDS Python ALB lab](https://github.com/inspiredevgen/devops-worksphops/blob/main/2-Cloud-Infrastructure/LABS/RDS/aws-lab-rds-python-alb/RDS-Python-ALB-Lab.en.md). This repository contains a new network template and accompanying notes; upstream application scripts are not copied in stage 01. Before using them, verify their current version and correct download paths to include `2-Cloud-Infrastructure/LABS/RDS/aws-lab-rds-python-alb/`.
+[inspiredevgen’s RDS Python ALB lab](https://github.com/inspiredevgen/devops-worksphops/blob/main/2-Cloud-Infrastructure/LABS/RDS/aws-lab-rds-python-alb/RDS-Python-ALB-Lab.en.md)
